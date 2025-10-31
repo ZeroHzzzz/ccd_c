@@ -1,0 +1,7 @@
+{
+	"files.associations": {
+		"imu.h": "c",
+		"zf_common_headfile.h": "c",
+		"attitude.h": "c"
+	}
+}

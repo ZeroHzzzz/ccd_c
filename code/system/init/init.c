@@ -12,5 +12,5 @@ void device_init(void)
     imu_init(IMU_DEVICE_963RA);
     attitude_init(ATTITUDE_EKF);
     pit_ms_init(CCU60_CH0, 1);
-    pit_ms_init(CCU60_CH1, 20000);
+    // pit_ms_init(CCU60_CH1, 20000);
 }

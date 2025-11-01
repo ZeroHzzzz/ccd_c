@@ -3,6 +3,8 @@
 
 #include "zf_common_typedef.h"
 
+#define IMAGE_HEIGHT 60
+
 typedef enum
 {
     COLOR_WHITE = 0,

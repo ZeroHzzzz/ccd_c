@@ -8,6 +8,7 @@ void device_init(void)
     tft180_init();
 
     tsl1401_init(); // TSL1401 初始化
+    encoder_left = encoder_init(TIM6_ENCODER, TIM6_ENCODER_CH1_P20_3, TIM6_ENCODER_CH2_P20_0);
 
     imu_init(IMU_DEVICE_963RA);
     attitude_init(ATTITUDE_EKF);

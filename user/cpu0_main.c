@@ -36,6 +36,7 @@
 #include "binary.h"
 #include "imu.h"
 #include "attitude.h"
+#include "utils.h"
 #include "cir_queue.h"
 
 #pragma section all "cpu0_dsram"
@@ -74,8 +75,9 @@ int core0_main(void)
             // 此处编写需要循环执行的代码
             // tft180_show_uint(0, 0, tsl1401_data[0][50], 4);
             // tft180_clear();
-            // binary_ccd_simple(tsl1401_data[0], rate, 128);
-            // tft180_show_wave(0, 16, rate, 128, 256, 128, 100);
+            binary_ccd_simple(tsl1401_data[0], rate, 128);
+            tft180_show_wave(0, 16, rate, 128, 256, 128, 100);
+            tft180_show_int(0, 0, find_widest_line(rate, 128), 4);
             // tft180_show_wave(0, 0, rate, 128, 256, 160, 127);
             tsl1401_finish_flag = 0;
 

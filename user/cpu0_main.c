@@ -36,6 +36,8 @@
 #include "binary.h"
 #include "imu.h"
 #include "attitude.h"
+#include "cir_queue.h"
+
 #pragma section all "cpu0_dsram"
 // 将本语句与#pragma section all restore语句之间的全局变量都放在CPU0的RAM中
 
@@ -57,16 +59,16 @@ int core0_main(void)
 
     while (TRUE)
     {
-        imu_data_t imu_data = imu_get_tmp_data();
-        tft180_show_float(0, 0, imu_data.gyro.x, 3, 3);
-        tft180_show_float(0, 16, imu_data.gyro.y, 3, 3);
-        tft180_show_float(0, 32, imu_data.gyro.z, 3, 3);
-        tft180_show_float(0, 48, imu_data.accel.x, 3, 3);
-        tft180_show_float(0, 64, imu_data.accel.y, 3, 3);
-        tft180_show_float(0, 80, imu_data.accel.z, 3, 3);
-        tft180_show_float(0, 96, attitude_get_pitch(), 3, 3);
-        tft180_show_float(0, 112, attitude_get_roll(), 3, 3);
-        tft180_show_float(0, 128, attitude_get_yaw(), 3, 3);
+        // imu_data_t imu_data = imu_get_tmp_data();
+        // tft180_show_float(0, 0, imu_data.gyro.x, 3, 3);
+        // tft180_show_float(0, 16, imu_data.gyro.y, 3, 3);
+        // tft180_show_float(0, 32, imu_data.gyro.z, 3, 3);
+        // tft180_show_float(0, 48, imu_data.accel.x, 3, 3);
+        // tft180_show_float(0, 64, imu_data.accel.y, 3, 3);
+        // tft180_show_float(0, 80, imu_data.accel.z, 3, 3);
+        // tft180_show_float(0, 96, attitude_get_pitch(), 3, 3);
+        // tft180_show_float(0, 112, attitude_get_roll(), 3, 3);
+        // tft180_show_float(0, 128, attitude_get_yaw(), 3, 3);
         if (tsl1401_finish_flag)
         {
             // 此处编写需要循环执行的代码

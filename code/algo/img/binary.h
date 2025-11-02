@@ -3,6 +3,6 @@
 
 #include "zf_common_typedef.h"
 
-void binary_ccd_simple(vuint16 *input, vuint16 *output, vuint16 length);
+void binary_ccd_simple(vuint16 *input, vuint8 *output, vuint16 length);
 
 #endif

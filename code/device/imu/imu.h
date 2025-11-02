@@ -7,6 +7,7 @@
 #include "common.h"
 
 #define gyroscope_threshold 5
+#define TURN_RADIO 14 // cm
 
 typedef enum
 {

@@ -61,16 +61,27 @@ vuint8 circlular_queue_dequeue(circlular_queue_t *queue, void *output)
 
 vuint8 circlular_queue_update_windows(circlular_queue_t *queue, const void *element)
 {
-    if (circlular_queue_full(queue))
+    // 错误检查：指针是否为空
+    if (!queue || !element || !queue->buffer || queue->capacity == 0 || queue->elem_size == 0)
     {
-        // 丢弃最老的
+        return 0; // 失败
+    }
+
+    vuint8 is_full = circlular_queue_full(queue);
+
+    if (is_full)
+    {
+        // 队列满：丢弃最老元素
         queue->head = (queue->head + 1) % queue->capacity;
     }
-    // 现在一定有空间
+
+    // 插入新元素到 rear 位置
     vuint8 *dest = queue->buffer + queue->rear * queue->elem_size;
     memcpy(dest, element, queue->elem_size);
     queue->rear = (queue->rear + 1) % queue->capacity;
-    return 1;
+
+    // 如果原本满，返回 1；否则返回 2
+    return is_full ? 1 : 2;
 }
 
 void **circlular_queue_export(circlular_queue_t *queue)

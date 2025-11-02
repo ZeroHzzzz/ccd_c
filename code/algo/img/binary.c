@@ -1,7 +1,7 @@
 #include "binary.h"
 #include "image.h"
 
-void binary_ccd_simple(vuint16 *input, vuint16 *output, vuint16 length)
+void binary_ccd_simple(vuint16 *input, vuint8 *output, vuint16 length)
 {
     vuint16 min_val = 65535;
     vuint16 max_val = 0;

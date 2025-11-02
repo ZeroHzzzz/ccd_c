@@ -4,11 +4,15 @@
 #include "zf_common_typedef.h"
 
 #define IMAGE_HEIGHT 60
+#define IMAGE_SAMPLE_TIME 30 // ms
 
 typedef enum
 {
-    COLOR_WHITE = 0,
-    COLOR_BLACK = 255,
+    COLOR_BLACK = 0,
+    COLOR_WHITE = 255,
 } image_color_e;
+
+void image_init();
+void image_update(vuint16 *tsl1401_data);
 
 #endif

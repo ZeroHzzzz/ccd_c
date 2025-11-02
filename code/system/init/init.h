@@ -9,4 +9,6 @@
 
 void device_init(void);
 
+extern encoder_obj_t encoder_left, encoder_right;
+
 #endif

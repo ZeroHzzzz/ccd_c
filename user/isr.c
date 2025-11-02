@@ -73,6 +73,7 @@ IFX_INTERRUPT(cc61_pit_ch1_isr, 0, CCU6_1_CH1_ISR_PRIORITY)
     pit_clear_flag(CCU61_CH1);
 
     tsl1401_collect_pit_handler(); // TSL1401 模块周期采集中断处理函数
+    image_update(tsl1401_data[0]);
 }
 // **************************** PIT中断函数 ****************************
 

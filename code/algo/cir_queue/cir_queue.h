@@ -28,6 +28,7 @@ vuint8 circlular_queue_update_windows(circlular_queue_t *queue, const void *elem
 
 // 导出所有元素（返回 void**，每个指针指向一个 elem_size 数据）
 void **circlular_queue_export(circlular_queue_t *queue);
+void **circlular_queue_export_reverse(circlular_queue_t *queue);
 
 // 工具函数
 vint16 circlular_queue_size(circlular_queue_t *queue);

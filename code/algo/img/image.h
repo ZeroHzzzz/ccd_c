@@ -3,8 +3,13 @@
 
 #include "zf_common_typedef.h"
 
-#define IMAGE_HEIGHT 60
-#define IMAGE_SAMPLE_TIME 30 // ms
+#define CCD_OUTLOOK 45     // 前瞻，单位为cm
+#define CCD_SAMPLE_TIME 30 // ccd曝光时间，单位为ms
+
+#define ENCODER_TO_CM 130 // 表示130个编码器脉冲为1cm
+
+#define IMAGE_ORIGIN_W 188
+#define IMAGE_ORIGIN_H 60
 
 typedef enum
 {

@@ -4,8 +4,6 @@
 #include "zf_common_typedef.h"
 #include "zf_driver_encoder.h"
 
-#define ENCODER_TO_CM 130 // 表示130个编码器单位为1cm
-
 typedef struct
 {
     encoder_index_enum index;

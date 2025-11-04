@@ -8,11 +8,7 @@ static circlular_queue_t *ccd_distortion = NULL; // 畸变参数队列，用于�
 vuint8 ccd_data[128] = {0};
 vuint8 image_full_flag = 0; // 图像队列满标志，因为他是一个窗口，因此需要知道什么时候满了
 
-vuint8 origin_map[IMAGE_ORIGIN_H][IMAGE_ORIGIN_W];
-
-// 这俩是导出的原始数据
-vuint8 camera_map[CCD_OUTLOOK][128];
-vint16 distortion_params[CCD_OUTLOOK][2];
+vuint8 origin_map[IMAGE_ORIGIN_H][IMAGE_ORIGIN_W] = {COLOR_BLACK}; // 初始化为黑色背景
 
 void image_init()
 {
@@ -25,7 +21,7 @@ void image_init()
 // 速度单位是cm/ms，采样时间30ms
 void image_update(vuint16 *tsl1401_data)
 {
-    vint16 distortion_params[2];
+    float distortion_params[2];
 
     binary_ccd_simple(tsl1401_data[0], ccd_data, 128);
     // x和y方向的畸变参数
@@ -50,22 +46,59 @@ void image_handler()
     void **tmp_distortion = circlular_queue_export_reverse(ccd_distortion);
 
     vuint8 default_offset = 30; // x方向上的偏移：(188-128)/2
-    vuint8 real_offset = default_offset;
+
+    float accumulated_row_offset = 0; // 行方向累积偏移量
+    float accumulated_col_offset = 0; // 列方向累积偏移量
 
     for (vuint8 i = 0; i < CCD_OUTLOOK; i++)
     {
-        real_offset -= ((vuint16 *)tmp_distortion[i])[1]; // y方向上的偏移，畸变参数是差分，需要累加还原
-        if (real_offset < 0)                              // 也就是超出左边界了，那就需要截断图像部分
+        accumulated_row_offset += ((float *)tmp_distortion[i])[0]; // 计算行方向累积偏移
+        accumulated_col_offset += ((float *)tmp_distortion[i])[1]; // 计算列方向累积偏移
+
+        // 将物理单位的偏移转换成像素单位
+        int row_pixel_offset = (int)(accumulated_row_offset * 2); // origin_map行方向2像素/cm
+        int col_pixel_offset = (int)accumulated_col_offset;       // origin_map列方向1像素/cm
+
+        vuint8 real_col_offset = default_offset - col_pixel_offset; // 更新当前行的列绝对偏移量
+
+        // 填充：需检查填充逻辑
+        // if (row_pixel_offset > 0 && i - row_pixel_offset >= 0)
+        // {
+        //     memcpy(&origin_map[i - row_pixel_offset][0], tmp_image[i], 128);
+        // }
+        if (col_pixel_offset >= 2) // 如果大于两行说明中间是不需要插的
         {
-            // TODO
+            for (vuint8 col = 1; col < col_pixel_offset; col++)
+            {
+                memcpy(&origin_map[i][real_col_offset], tmp_image[i], 128);
+            }
         }
-        else if (real_offset > 60) // 超出右边界了
+
+        if (real_col_offset < 0) // 也就是超出左边界了，那就需要截断图像部分
         {
-            // TODO
+            // 计算实际可复制的数据起始位置和长度
+            int start_pos = -real_col_offset;
+            int copy_length = 128 - start_pos;
+
+            if (copy_length > 0) // 部分数据仍在范围内
+            {
+                memcpy(&origin_map[i][0], &((vuint8 *)tmp_image[i])[start_pos], copy_length);
+            }
+        }
+        else if (real_col_offset > (IMAGE_ORIGIN_W - 128)) // 超出右边界了
+        {
+            // 计算实际可复制的数据长度
+            int copy_length = IMAGE_ORIGIN_W - real_col_offset;
+
+            if (copy_length > 0) // 部分数据仍在范围内
+            {
+                memcpy(&origin_map[i][real_col_offset], tmp_image[i], copy_length);
+            }
         }
         else
         {
-            memcpy(&camera_map[i][real_offset], tmp_image[i], 128);
+
+            memcpy(&origin_map[i][real_col_offset], tmp_image[i], 128);
         }
     }
 

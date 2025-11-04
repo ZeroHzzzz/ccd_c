@@ -9,7 +9,7 @@
 #define ENCODER_TO_CM 130 // 表示130个编码器脉冲为1cm
 
 #define IMAGE_ORIGIN_W 188
-#define IMAGE_ORIGIN_H 60
+#define IMAGE_ORIGIN_H 120
 
 typedef enum
 {

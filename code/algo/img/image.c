@@ -43,62 +43,77 @@ void image_handler()
     // 导出图像和畸变参数
 
     void **tmp_image = circlular_queue_export_reverse(ccd_image);
-    void **tmp_distortion = circlular_queue_export_reverse(ccd_distortion);
+    void **tmp_distortion = circlular_queue_export_reverse(ccd_distortion); // 这里畸变系数记录的是第i行相对于第i-1行的偏移
 
     vuint8 default_offset = 30; // x方向上的偏移：(188-128)/2
 
-    float accumulated_row_offset = 0; // 行方向累积偏移量
-    float accumulated_col_offset = 0; // 列方向累积偏移量
+    // float 单位的偏移量。至于这里为什么用float只是为了抑制误差（真可以吗？）
+    float accumulated_row_offset = 0.0f; // 累计的行偏移量，单位cm
+    float accumulated_col_offset = 0.0f; // 累计的列偏移量，单位cm
 
-    for (vuint8 i = 0; i < CCD_OUTLOOK; i++)
+    vuint8 curr_row = 0; // 当前行指针
+
+    for (vuint8 i = 0; i < CCD_OUTLOOK && curr_row < IMAGE_ORIGIN_H; i++)
     {
-        accumulated_row_offset += ((float *)tmp_distortion[i])[0]; // 计算行方向累积偏移
-        accumulated_col_offset += ((float *)tmp_distortion[i])[1]; // 计算列方向累积偏移
+        float curr_row_offset = ((float *)tmp_distortion[i])[0];
+        float curr_col_offset = ((float *)tmp_distortion[i])[1];
 
-        // 将物理单位的偏移转换成像素单位
-        int row_pixel_offset = (int)(accumulated_row_offset * 2); // origin_map行方向2像素/cm
-        int col_pixel_offset = (int)accumulated_col_offset;       // origin_map列方向1像素/cm
+        // 保存插值前的累计偏移
+        float prev_accumulated_row = accumulated_row_offset;
+        float prev_accumulated_col = accumulated_col_offset;
 
-        vuint8 real_col_offset = default_offset - col_pixel_offset; // 更新当前行的列绝对偏移量
+        // 更新累计偏移量
+        accumulated_row_offset += curr_row_offset;
+        accumulated_col_offset += curr_col_offset;
 
-        // 填充：需检查填充逻辑
-        // if (row_pixel_offset > 0 && i - row_pixel_offset >= 0)
-        // {
-        //     memcpy(&origin_map[i - row_pixel_offset][0], tmp_image[i], 128);
-        // }
-        if (col_pixel_offset >= 2) // 如果大于两行说明中间是不需要插的
+        // 计算插值需要的参数
+        int total_pixel_rows = (int)(curr_row_offset * 2); // 总需要填充的像素行数
+
+        if (total_pixel_rows <= 0)
         {
-            for (vuint8 col = 1; col < col_pixel_offset; col++)
-            {
-                memcpy(&origin_map[i][real_col_offset], tmp_image[i], 128);
-            }
+            total_pixel_rows = 1; // 至少填充一行
         }
 
-        if (real_col_offset < 0) // 也就是超出左边界了，那就需要截断图像部分
+        // 为当前行数据创建插值行
+        for (int insert_idx = 0; insert_idx < total_pixel_rows && curr_row < IMAGE_ORIGIN_H; insert_idx++)
         {
-            // 计算实际可复制的数据起始位置和长度
-            int start_pos = -real_col_offset;
-            int copy_length = 128 - start_pos;
+            // 计算当前插入行的相对进度 (0.0 到 1.0)
+            float progress = (total_pixel_rows > 1) ? (float)insert_idx / (total_pixel_rows - 1) : 0.0f;
 
-            if (copy_length > 0) // 部分数据仍在范围内
+            // 计算当前行的列偏移（线性插值）
+            float current_col_offset = prev_accumulated_col + curr_col_offset * progress;
+            int current_col_pixel = default_offset - (int)current_col_offset;
+
+            // 边界处理
+            if (current_col_pixel < 0)
             {
-                memcpy(&origin_map[i][0], &((vuint8 *)tmp_image[i])[start_pos], copy_length);
+                int start_pos = -current_col_pixel;
+                int copy_length = 128 - start_pos;
+                if (copy_length > 0 && start_pos < 128)
+                {
+                    memcpy(&origin_map[curr_row][0],
+                           &((vuint8 *)tmp_image[i])[start_pos],
+                           copy_length);
+                }
             }
-        }
-        else if (real_col_offset > (IMAGE_ORIGIN_W - 128)) // 超出右边界了
-        {
-            // 计算实际可复制的数据长度
-            int copy_length = IMAGE_ORIGIN_W - real_col_offset;
-
-            if (copy_length > 0) // 部分数据仍在范围内
+            else if (current_col_pixel > IMAGE_ORIGIN_W - 128)
             {
-                memcpy(&origin_map[i][real_col_offset], tmp_image[i], copy_length);
+                int copy_length = IMAGE_ORIGIN_W - current_col_pixel;
+                if (copy_length > 0)
+                {
+                    memcpy(&origin_map[curr_row][current_col_pixel],
+                           tmp_image[i],
+                           copy_length);
+                }
             }
-        }
-        else
-        {
+            else
+            {
+                memcpy(&origin_map[curr_row][current_col_pixel],
+                       tmp_image[i],
+                       128);
+            }
 
-            memcpy(&origin_map[i][real_col_offset], tmp_image[i], 128);
+            curr_row++;
         }
     }
 
